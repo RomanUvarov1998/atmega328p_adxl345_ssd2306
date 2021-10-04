@@ -12,17 +12,24 @@ int main(void) {
     PORTB &= ~(1 << PORTB5);
     
     twi_init();
+    //adc_init();
     ei();
     
     lcd_init();    
     
     lcd_clear();
-    //while (1);
     
-    lcd_draw_text("HELLO, WORLD!");
+    lcd_draw_text("HELLO, WORLD! ");
+    lcd_draw_int(123);
+    lcd_draw_text(" HELLO, WORLD! ");
+    lcd_draw_int(123);
+    lcd_draw_text(" HELLO, WORLD! ");
     lcd_draw_int(123);
     
     PORTB |= (1 << PORTB5);
-    while (1);    
+    while (1) {
+        //uint8_t value = adc_scan_channel(ADCCH_0);
+        //lcd_draw_int(value);
+    }    
     return 0;
 }

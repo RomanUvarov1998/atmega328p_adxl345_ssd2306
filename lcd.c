@@ -94,8 +94,8 @@ static void draw_symbol(const Symbol const* sym_buf);
 
 #define SYM_COL_MAX 127
 #define SYM_PAGE_MAX 3
-static int8_t sym_col = SYM_COL_MAX;
-static int8_t sym_page = SYM_PAGE_MAX;
+static volatile int8_t sym_col = 0;
+static volatile int8_t sym_page = 0;
 static void go_to_next_symbol_pos();
 static void reset_symbol_pos();
 
@@ -394,7 +394,6 @@ void lcd_draw_text(const char *const cstr) {
         const Symbol const* sym_buf = get_char(*ch);
         if (sym_buf != 0) {
             draw_symbol(sym_buf);
-            _delay_ms(500);
         } else {
             while (1);
         }
@@ -430,6 +429,14 @@ void lcd_draw_int(uint8_t value) {
     lcd_draw_text(buff);
 }
 
+void lcd_set_cursor_pos(uint8_t row, uint8_t col) {
+    #define MAX_COL (127 / SYMBOL_W_COLS)
+    #define MAX_ROW SYM_PAGE_MAX
+    if (col > MAX_COL) {
+        
+    }
+}
+
 //
 // -------------------- Utils -----------------------------
 //
@@ -456,7 +463,7 @@ static void cmd_buf_send() {
 }
 
 static void draw_symbol(const Symbol const* sym_buf) {   
-    set_col_range_addr(sym_col - SYMBOL_W_COLS, sym_col);
+    set_col_range_addr(sym_col, sym_col + SYMBOL_W_COLS);
     set_page_start_addr(sym_page);
     
     cmd_buf_clear();
@@ -476,16 +483,16 @@ static void draw_symbol(const Symbol const* sym_buf) {
 }
 
 static void reset_symbol_pos() {
-    sym_col = SYM_COL_MAX;
-    sym_page = SYM_PAGE_MAX;
+    sym_col = 0;
+    sym_page = 0;
 }
 static void go_to_next_symbol_pos() {
-    sym_col -= SYMBOL_W_COLS;
-    if (sym_col < 0) {
-        sym_col = SYM_COL_MAX;
-        --sym_page;
+    sym_col += SYMBOL_W_COLS;
+    if (sym_col + SYMBOL_W_COLS > SYM_COL_MAX) {
+        sym_col = 0;
+        ++sym_page;
     }
-    if (sym_page < 0) 
+    if (sym_page > SYM_PAGE_MAX) 
         reset_symbol_pos();
 }
 
