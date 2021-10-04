@@ -394,6 +394,7 @@ void lcd_draw_text(const char *const cstr) {
         const Symbol const* sym_buf = get_char(*ch);
         if (sym_buf != 0) {
             draw_symbol(sym_buf);
+            _delay_ms(100);
         } else {
             while (1);
         }
@@ -432,9 +433,13 @@ void lcd_draw_int(uint8_t value) {
 void lcd_set_cursor_pos(uint8_t row, uint8_t col) {
     #define MAX_COL (127 / SYMBOL_W_COLS)
     #define MAX_ROW SYM_PAGE_MAX
-    if (col > MAX_COL) {
-        
-    }
+    if (col > MAX_COL)
+        col = MAX_COL;
+    if (row > MAX_ROW)
+        row = MAX_ROW;
+    
+    sym_col = col * SYMBOL_W_COLS;
+    sym_page = row;  
 }
 
 //

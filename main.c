@@ -21,8 +21,10 @@ int main(void) {
     
     lcd_draw_text("HELLO, WORLD! ");
     lcd_draw_int(123);
+    lcd_set_cursor_pos(0, 1);
     lcd_draw_text(" HELLO, WORLD! ");
     lcd_draw_int(123);
+    lcd_set_cursor_pos(0, 2);
     lcd_draw_text(" HELLO, WORLD! ");
     lcd_draw_int(123);
     
