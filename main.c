@@ -19,7 +19,7 @@ int main(void) {
     lcd_clear();
     //while (1);
     
-    lcd_draw_text("ABCDEF");
+    lcd_draw_text("HELLO, WORLD!");
     
     PORTB |= (1 << PORTB5);
     while (1);    
