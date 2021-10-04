@@ -17,6 +17,7 @@ extern "C" {
     void lcd_init();
     void lcd_clear(void);
     void lcd_draw_text(const char *const cstr);
+    void lcd_draw_int(uint8_t value);
 
 #ifdef	__cplusplus
 }

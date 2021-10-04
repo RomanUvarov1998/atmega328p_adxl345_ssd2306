@@ -20,6 +20,7 @@ int main(void) {
     //while (1);
     
     lcd_draw_text("HELLO, WORLD!");
+    lcd_draw_int(123);
     
     PORTB |= (1 << PORTB5);
     while (1);    
