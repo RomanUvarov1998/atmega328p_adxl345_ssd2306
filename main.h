@@ -20,6 +20,7 @@ extern "C" {
 #include "twi.h"
 #include "lcd.h"
 #include "encoder.h"
+#include "adc.h"
 
 #ifdef	__cplusplus
 }

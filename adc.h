@@ -12,6 +12,8 @@
 extern "C" {
 #endif
 
+    #include <stdint.h>
+    
     void adc_init(void);
     
     enum ADC_Channel {
@@ -21,8 +23,6 @@ extern "C" {
         ADCCH_3,
         ADCCH_4,
         ADCCH_5,
-        ADCCH_6,
-        ADCCH_7,
     };
     uint8_t adc_scan_channel(enum ADC_Channel channel);
 

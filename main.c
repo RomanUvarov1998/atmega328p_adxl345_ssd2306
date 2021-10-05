@@ -9,30 +9,29 @@
     
 int main(void) {      
     twi_init();
-    //adc_init();
-    enc_init();
-    ei();
+    ei();     
+    lcd_init();  
+    lcd_clear();
+    lcd_draw_text("Init...");
     
-    lcd_init();    
+    adc_init();
+    enc_init(); 
     
     lcd_clear();
     
-    lcd_draw_text("COUNTER: ...");
+    lcd_draw_text("SENS: ...");
     
-    uint8_t time = 0;
-    while (1) {
+    for (;;) {
         if (enc_value_updated()) {
-            lcd_set_cursor_pos(0, 9);
+            lcd_set_cursor_pos(0, 6);
             lcd_draw_int(get_enc_value());
         }
-        _delay_ms(100);
-            
-        lcd_set_cursor_pos(1, 0);
-        lcd_draw_int(time);
-        ++time;
         
-        //uint8_t value = adc_scan_channel(ADCCH_0);
-        //lcd_draw_int(value);
+        uint8_t value = adc_scan_channel(ADCCH_0);
+        lcd_set_cursor_pos(1, 0);
+        lcd_draw_int(value);
+        
+        _delay_ms(100);
     }    
     
     return 0;
