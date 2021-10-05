@@ -7,6 +7,23 @@ enum ADC_REFS {
     AR_Internal_1_1V_AREFcap = 0x03
 };
 
+enum ADC_Prescaler {
+    ADCPSC_2 = 0x01,
+    ADCPSC_4 = 0x02,
+    ADCPSC_8 = 0x03,
+    ADCPSC_16 = 0x04,
+    ADCPSC_32 = 0x05,
+    ADCPSC_64 = 0x06,
+    ADCPSC_128 = 0x07,
+};
+
+static void set_ADC_clk_prescaler(enum ADC_Prescaler psc) {
+    uint8_t adcsra = ADCSRA;
+    adcsra &= 0xF8;
+    adcsra |= psc & 0x7F;
+    ADCSRA = adcsra; 
+}
+
 void adc_init(void) {
     ADMUX &= ~(_BV(REFS1) | _BV(REFS0)); // AREF by default    
     ADMUX |= _BV(ADLAR); // left adjusted
@@ -14,8 +31,7 @@ void adc_init(void) {
     // Single conversion mode by default
     // No triggers are used
     
-    // ADC clock prescaler to 128
-    ADCSRA |= _BV(ADPS2) | _BV(ADPS1) | _BV(ADPS0); 
+    set_ADC_clk_prescaler(ADCPSC_32);
 } 
 
 uint8_t adc_scan_channel(enum ADC_Channel channel) {

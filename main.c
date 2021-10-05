@@ -12,6 +12,7 @@ int main(void) {
     ei();     
     lcd_init();  
     lcd_clear();
+    lcd_set_cursor_pos(0, 0);
     lcd_draw_text("Init...");
     
     adc_init();
@@ -19,6 +20,7 @@ int main(void) {
     
     lcd_clear();
     
+    lcd_set_cursor_pos(0, 0);
     lcd_draw_text("SENS: ...");
     
     for (;;) {
