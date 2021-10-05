@@ -13,25 +13,16 @@ extern "C" {
 #endif
 
     #include <avr/io.h>
+    #define F_CPU 16000000
     #include <util/delay.h>
-
+    #include <stdbool.h>
+    
     enum ErrKind {
         ERR_TWI_CMD_BUF_OVERFLOW = 5,
         ERR_TWI_BUS_ERR = 6
     };
 
-    void assert(bool expr) {
-        if (expr) 
-            return;
-        
-        DDRB |= _BV(DDB5);
-        while (1) {
-            PORTB |= _BV(PORTB5);
-            _delay_ms(300);
-            PORTB &= ~_BV(PORTB5);
-            _delay_ms(300);
-        }
-    }
+    void hang_if_not(bool expr);
 
 #ifdef	__cplusplus
 }

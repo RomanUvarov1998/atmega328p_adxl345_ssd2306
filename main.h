@@ -17,6 +17,7 @@ extern "C" {
 #include <avr/io.h>
 #define F_CPU 16000000
 #include <util/delay.h>
+#include "utils.h"
 #include "twi.h"
 #include "lcd.h"
 #include "encoder.h"

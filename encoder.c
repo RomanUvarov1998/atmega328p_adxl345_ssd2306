@@ -1,4 +1,5 @@
 #include "encoder.h"
+#include "utils.h"
 
 enum InterruptTrigger {
     IT_Low = 0x00,
@@ -7,11 +8,15 @@ enum InterruptTrigger {
     IT_RisingEdge = 0x11,
 };
 
-static volatile uint8_t enc_value = 0;
+static volatile uint8_t enc_value = 1;
 static volatile bool new_enc_value_is_read = false;
 static volatile bool btn_is_pressed = false;
 
-void enc_init(void) {  
+static volatile ValueChangeCbk value_change_cbk = 0;
+
+void enc_init(ValueChangeCbk _value_change_cbk) {  
+    value_change_cbk = _value_change_cbk;
+    
     /*======== button ==============*/
     // external interrupt 0 is on PB0
     DDRB &= ~_BV(DDB0); // is input
@@ -44,16 +49,10 @@ uint8_t get_enc_value(void) {
 #define D2_IS_HIGH ((PIND & _BV(PIND2)) > 0)
 #define D3_IS_HIGH ((PIND & _BV(PIND3)) > 0)
 
-ISR(PCINT2_vect) {
-    const uint32_t FAST = 10;
-    const uint32_t SLOW = 1;    
+ISR(PCINT2_vect) { 
     if (!D3_IS_HIGH) {
-        uint8_t change_speed = btn_is_pressed ? FAST : SLOW;
-        if (D2_IS_HIGH) {
-            enc_value -= change_speed;
-        } else {
-            enc_value += change_speed;
-        }
+        enum EncChangeDirection dir = D2_IS_HIGH ? ECD_Dec : ECD_Inc;
+        enc_value = value_change_cbk(enc_value, btn_is_pressed, dir);
         new_enc_value_is_read = false;
     }
 }

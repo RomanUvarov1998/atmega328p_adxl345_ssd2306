@@ -344,20 +344,20 @@ void lcd_clear(void) {
     // start
     TWCR = _BV(TWINT) | _BV(TWEA) | _BV(TWEN) | _BV(TWSTA);
     while ((TWCR & _BV(TWINT)) == 0);
-    assert(TW_STATUS == TW_START);
+    hang_if_not(TW_STATUS == TW_START);
     
     // slaw
     uint8_t slaw = SLAVE_ADDR << 1;
     TWDR = slaw;
     TWCR = _BV(TWINT) | _BV(TWEA) | _BV(TWEN);
     while ((TWCR & _BV(TWINT)) == 0);
-    assert(TW_STATUS == TW_MT_SLA_ACK);
+    hang_if_not(TW_STATUS == TW_MT_SLA_ACK);
         
     // cmd to write data
     TWDR = CMD_SET_DISPLAY_START_LINE_REG;
     TWCR = _BV(TWINT) | _BV(TWEA) | _BV(TWEN);
     while ((TWCR & _BV(TWINT)) == 0);
-    assert(TW_STATUS == TW_MT_DATA_ACK);
+    hang_if_not(TW_STATUS == TW_MT_DATA_ACK);
     
     uint8_t page, col;
     for (page = 0; page < 8; ++page) {
@@ -365,7 +365,7 @@ void lcd_clear(void) {
             TWDR = 0x00;
             TWCR = _BV(TWINT) | _BV(TWEA) | _BV(TWEN);
             while ((TWCR & _BV(TWINT)) == 0);
-            assert(TW_STATUS == TW_MT_DATA_ACK);
+            hang_if_not(TW_STATUS == TW_MT_DATA_ACK);
         }
     }
     
@@ -385,8 +385,11 @@ void lcd_draw_text(const char *const cstr) {
 }
 
 void lcd_draw_uint8(uint8_t value) {
-    char buff[4] = {0};
-    int8_t pos = 2;
+    #define DIGITS_CNT 3
+    #define DIGITS_BUF_LEN (DIGITS_CNT + 1)
+    #define RIGHT_DIGIT_POS (DIGITS_CNT - 1)
+    char buff[DIGITS_BUF_LEN] = {0};
+    int8_t pos = RIGHT_DIGIT_POS;
     uint8_t div;
     
     while (pos >= 0) {
@@ -395,7 +398,7 @@ void lcd_draw_uint8(uint8_t value) {
         uint8_t div_x_10 = (div << 3) + (div << 1);
         uint8_t mod = value - div_x_10;
         
-        if (mod == 0 && div == 0 && pos < 2) {
+        if (mod == 0 && div == 0 && pos < RIGHT_DIGIT_POS) {
             buff[pos] = ' ';
         } else {
             buff[pos] = mod + '0';
@@ -406,11 +409,17 @@ void lcd_draw_uint8(uint8_t value) {
     }
     
     lcd_draw_text(buff);
+    #undef RIGHT_DIGIT_POS
+    #undef DIGITS_BUF_LEN
+    #undef DIGITS_CNT
 }
 
 void lcd_draw_uint16(uint16_t value) {
-    char buff[5] = {0};
-    int8_t pos = 3;
+    #define DIGITS_CNT 6
+    #define DIGITS_BUF_LEN (DIGITS_CNT + 1)
+    #define RIGHT_DIGIT_POS (DIGITS_CNT - 1)
+    char buff[DIGITS_BUF_LEN] = {0};
+    int8_t pos = RIGHT_DIGIT_POS;
     uint16_t div;
     
     while (pos >= 0) {
@@ -419,7 +428,7 @@ void lcd_draw_uint16(uint16_t value) {
         uint16_t div_x_10 = (div << 3) + (div << 1);
         uint8_t mod = value - div_x_10;
         
-        if (mod == 0 && div == 0 && pos < 3) {
+        if (mod == 0 && div == 0 && pos < RIGHT_DIGIT_POS) {
             buff[pos] = ' ';
         } else {
             buff[pos] = mod + '0';
@@ -430,6 +439,9 @@ void lcd_draw_uint16(uint16_t value) {
     }
     
     lcd_draw_text(buff);
+    #undef RIGHT_DIGIT_POS
+    #undef DIGITS_BUF_LEN
+    #undef DIGITS_CNT
 }
 
 void lcd_set_cursor_pos(uint8_t row, uint8_t col) {
@@ -448,7 +460,7 @@ void lcd_set_cursor_pos(uint8_t row, uint8_t col) {
 // -------------------- Utils -----------------------------
 //
 static void cmd_buf_push(uint8_t cmd) { // fast blinking on buffer overflow
-    assert(buf_size < TWI_BUFFER_LENGTH);
+    hang_if_not(buf_size < TWI_BUFFER_LENGTH);
     cmd_buf[buf_size++] = cmd;
 }
 
@@ -458,7 +470,7 @@ static void cmd_buf_clear() {
 
 static void cmd_buf_send() {
     uint8_t result = twi_writeTo(SLAVE_ADDR, cmd_buf, buf_size, true, true);
-    assert(result == 0);
+    hang_if_not(result == 0);
 }
 
 static void draw_symbol(const Symbol const* sym_buf) {   
