@@ -402,7 +402,7 @@ void lcd_draw_text(const char *const cstr) {
 }
 
 void lcd_draw_int(uint8_t value) {
-    char buff[4];
+    char buff[4] = {0};
     int8_t pos = 2;
     uint8_t div;
     
@@ -412,7 +412,7 @@ void lcd_draw_int(uint8_t value) {
         uint8_t div_x_10 = (div << 3) + (div << 1);
         uint8_t mod = value - div_x_10;
         
-        if (mod == 0 && div == 0) {
+        if (mod == 0 && div == 0 && pos < 2) {
             buff[pos] = ' ';
         } else {
             buff[pos] = mod + '0';
@@ -422,7 +422,6 @@ void lcd_draw_int(uint8_t value) {
         --pos;
     }
     
-    buff[3] = 0;
     lcd_draw_text(buff);
 }
 

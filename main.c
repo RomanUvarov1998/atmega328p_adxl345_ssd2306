@@ -7,9 +7,9 @@
 
 #include "main.h"
     
-int main(void) {    
-    DDRB |= (1 << DDB5);
-    PORTB &= ~(1 << PORTB5);
+int main(void) {  
+    DDRB |= _BV(DDB5);
+    PORTB &= ~_BV(PORTB5);
     
     twi_init();
     //adc_init();
@@ -22,15 +22,21 @@ int main(void) {
     
     lcd_draw_text("COUNTER: ...");
     
-    PORTB |= (1 << PORTB5);
+    uint8_t time = 0;
     while (1) {
         if (enc_value_updated()) {
             lcd_set_cursor_pos(0, 9);
             lcd_draw_int(get_enc_value());
         }
-        _delay_ms(16);
+        _delay_ms(100);
+            
+        lcd_set_cursor_pos(1, 0);
+        lcd_draw_int(time);
+        ++time;
+        
         //uint8_t value = adc_scan_channel(ADCCH_0);
         //lcd_draw_int(value);
     }    
+    
     return 0;
 }
