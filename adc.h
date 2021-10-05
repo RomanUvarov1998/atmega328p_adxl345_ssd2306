@@ -24,7 +24,8 @@ extern "C" {
         ADCCH_4,
         ADCCH_5,
     };
-    uint8_t adc_scan_channel(enum ADC_Channel channel);
+    uint8_t adc_scan_channel_uint8(enum ADC_Channel channel);
+    uint16_t adc_scan_channel_uint16(enum ADC_Channel channel);
 
 #ifdef	__cplusplus
 }

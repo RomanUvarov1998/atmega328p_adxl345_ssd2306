@@ -1,5 +1,6 @@
 #include "adc.h"
-#include "avr/io.h"
+#include <avr/io.h>
+#include <stdbool.h>
 
 enum ADC_REFS {
     AR_AREF = 0x00,
@@ -26,31 +27,69 @@ static void set_ADC_clk_prescaler(enum ADC_Prescaler psc) {
 
 void adc_init(void) {
     ADMUX &= ~(_BV(REFS1) | _BV(REFS0)); // AREF by default    
-    ADMUX |= _BV(ADLAR); // left adjusted
     
     // Single conversion mode by default
-    // No triggers are used
-    
-    set_ADC_clk_prescaler(ADCPSC_32);
+    // No triggers are used    
 } 
 
-uint8_t adc_scan_channel(enum ADC_Channel channel) {
-    while (ADCSRA & _BV(ADSC)); // wait for prev conversion end
-    
-    DIDR0 |= _BV(channel); // turn on power safe mode for pin
+static void select_channel(enum ADC_Channel channel) {
+    while (ADCSRA & _BV(ADSC)); // wait for prev conversion end  
     
     uint8_t admux = ADMUX;
     admux &= 0xF0; // clear MUX bits
     admux |= channel & 0x0F;
     ADMUX = admux;
-    
-    ADCSRA |= _BV(ADSC) | _BV(ADEN); // start conversion
+}
+
+enum Alignment {
+    AL_Left = _BV(ADLAR),
+    AL_Right = ~_BV(ADLAR),
+};
+
+static void set_alignment(enum Alignment al) {
+    switch (al) {
+        case AL_Left: ADMUX |= _BV(ADLAR); break;
+        case AL_Right: ADMUX &= ~_BV(ADLAR); break;
+    }
+}
+
+static void set_digital_pin_enabled(bool enabled, enum ADC_Channel channel) {
+    if (enabled)
+        DIDR0 &= ~_BV(channel); // turn off power safe mode for pin
+    else
+        DIDR0 |= _BV(channel); // turn on power safe mode for pin  
+}
+
+static void do_conversion() {    
+    ADCSRA |= _BV(ADEN); // turn ADC on
+    ADCSRA |= _BV(ADSC); // start conversion
     while (ADCSRA & _BV(ADSC)); // wait for conversion end
-           
-    uint8_t result = ADCH;
-    
-    DIDR0 &= ~_BV(channel); // turn off power safe mode for pin
     ADCSRA &= ~_BV(ADEN); // turn ADC off
+}
+
+uint8_t adc_scan_channel_uint8(enum ADC_Channel channel) {
+    set_alignment(AL_Left); 
+    set_digital_pin_enabled(false, channel);    
+    set_ADC_clk_prescaler(ADCPSC_32);    
+    select_channel(channel);    
+    do_conversion();   
     
+    uint8_t result = ADCH;  
+    
+    set_digital_pin_enabled(true, channel);    
+    return result;
+}
+
+uint16_t adc_scan_channel_uint16(enum ADC_Channel channel) {
+    set_alignment(AL_Right);
+    set_digital_pin_enabled(false, channel);   
+    set_ADC_clk_prescaler(ADCPSC_64);     
+    select_channel(channel);       
+    do_conversion();         
+           
+    uint16_t result = (uint16_t)ADCL;
+    result |= (uint16_t)ADCH << 8;
+    
+    set_digital_pin_enabled(true, channel);    
     return result;
 }

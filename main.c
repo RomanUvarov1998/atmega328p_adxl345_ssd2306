@@ -26,12 +26,12 @@ int main(void) {
     for (;;) {
         if (enc_value_updated()) {
             lcd_set_cursor_pos(0, 6);
-            lcd_draw_int(get_enc_value());
+            lcd_draw_uint8(get_enc_value());
         }
         
-        uint8_t value = adc_scan_channel(ADCCH_0);
+        uint16_t value = adc_scan_channel_uint16(ADCCH_0);
         lcd_set_cursor_pos(1, 0);
-        lcd_draw_int(value);
+        lcd_draw_uint16(value);
         
         _delay_ms(100);
     }    
