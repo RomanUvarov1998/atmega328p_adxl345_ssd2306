@@ -2,6 +2,7 @@
 
 #include "lcd.h"
 #include "font.h"
+#include "utils.h"
 #define SLAVE_ADDR 0b0111100
 
 static uint8_t cmd_buf[TWI_BUFFER_LENGTH];
@@ -11,8 +12,6 @@ static void cmd_buf_clear();
 static void cmd_buf_send();
 
 #define DRAW_BUF_LENGTH SYMBOL_W_COLS
-
-static void indicate_hang_if_err(uint8_t n);
     
 enum Cmd {
     CMD_ZERO = 0x00,
@@ -345,29 +344,20 @@ void lcd_clear(void) {
     // start
     TWCR = _BV(TWINT) | _BV(TWEA) | _BV(TWEN) | _BV(TWSTA);
     while ((TWCR & _BV(TWINT)) == 0);
-    if (TW_STATUS != TW_START) {
-        PORTB |= (1 << PORTB5);
-        while (1);
-    }
+    assert(TW_STATUS == TW_START);
     
     // slaw
     uint8_t slaw = SLAVE_ADDR << 1;
     TWDR = slaw;
     TWCR = _BV(TWINT) | _BV(TWEA) | _BV(TWEN);
     while ((TWCR & _BV(TWINT)) == 0);
-    if (TW_STATUS != TW_MT_SLA_ACK) {
-        PORTB |= (1 << PORTB5);
-        while (1);
-    }
+    assert(TW_STATUS == TW_MT_SLA_ACK);
         
     // cmd to write data
     TWDR = CMD_SET_DISPLAY_START_LINE_REG;
     TWCR = _BV(TWINT) | _BV(TWEA) | _BV(TWEN);
     while ((TWCR & _BV(TWINT)) == 0);
-    if (TW_STATUS != TW_MT_DATA_ACK) {
-        PORTB |= (1 << PORTB5);
-        while (1);
-    }
+    assert(TW_STATUS == TW_MT_DATA_ACK);
     
     uint8_t page, col;
     for (page = 0; page < 8; ++page) {
@@ -375,10 +365,7 @@ void lcd_clear(void) {
             TWDR = 0x00;
             TWCR = _BV(TWINT) | _BV(TWEA) | _BV(TWEN);
             while ((TWCR & _BV(TWINT)) == 0);
-            if (TW_STATUS != TW_MT_DATA_ACK) {
-                PORTB |= (1 << PORTB5);
-                while (1);
-            }          
+            assert(TW_STATUS == TW_MT_DATA_ACK);
         }
     }
     
@@ -392,11 +379,7 @@ void lcd_draw_text(const char *const cstr) {
     const char *ch = cstr;
     while (*ch != 0) {
         const Symbol const* sym_buf = get_char(*ch);
-        if (sym_buf != 0) {
-            draw_symbol(sym_buf);
-        } else {
-            while (1);
-        }
+        draw_symbol(sym_buf);
         ch++;
     }
 }
@@ -441,16 +424,8 @@ void lcd_set_cursor_pos(uint8_t row, uint8_t col) {
 // -------------------- Utils -----------------------------
 //
 static void cmd_buf_push(uint8_t cmd) { // fast blinking on buffer overflow
-    if (buf_size < TWI_BUFFER_LENGTH) {
-        cmd_buf[buf_size++] = cmd;
-    } else {
-        while (true) {
-            _delay_ms(100);
-            PORTB |= (1 << PORTB5);
-            _delay_ms(100);
-            PORTB &= ~(1 << PORTB5);
-        }
-    }
+    assert(buf_size < TWI_BUFFER_LENGTH);
+    cmd_buf[buf_size++] = cmd;
 }
 
 static void cmd_buf_clear() {
@@ -459,7 +434,7 @@ static void cmd_buf_clear() {
 
 static void cmd_buf_send() {
     uint8_t result = twi_writeTo(SLAVE_ADDR, cmd_buf, buf_size, true, true);
-    indicate_hang_if_err(result);
+    assert(result == 0);
 }
 
 static void draw_symbol(const Symbol const* sym_buf) {   
@@ -494,20 +469,4 @@ static void go_to_next_symbol_pos() {
     }
     if (sym_page > SYM_PAGE_MAX) 
         reset_symbol_pos();
-}
-
-static void indicate_hang_if_err(uint8_t n) {
-    PORTB &= ~(1 << PORTB5);
-    
-    if (n == 0) return;
-    
-    while (n > 0) {
-        _delay_ms(1000);
-        PORTB |= (1 << PORTB5);
-        _delay_ms(500);
-        PORTB &= ~(1 << PORTB5);
-        --n;
-    }
-    
-    while (1);
 }

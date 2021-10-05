@@ -7,10 +7,7 @@
 
 #include "main.h"
     
-int main(void) {  
-    DDRB |= _BV(DDB5);
-    PORTB &= ~_BV(PORTB5);
-    
+int main(void) {      
     twi_init();
     //adc_init();
     enc_init();

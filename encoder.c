@@ -65,5 +65,4 @@ ISR(PCINT2_vect) {
 
 ISR(PCINT0_vect) {
     btn_is_pressed = !B0_IS_HIGH;
-    PORTB ^= _BV(PORTB5);
 }
