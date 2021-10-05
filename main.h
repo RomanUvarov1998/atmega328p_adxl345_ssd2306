@@ -19,6 +19,7 @@ extern "C" {
 #include <util/delay.h>
 #include "twi.h"
 #include "lcd.h"
+#include "encoder.h"
 
 #ifdef	__cplusplus
 }
