@@ -394,7 +394,6 @@ void lcd_draw_text(const char *const cstr) {
         const Symbol const* sym_buf = get_char(*ch);
         if (sym_buf != 0) {
             draw_symbol(sym_buf);
-            _delay_ms(100);
         } else {
             while (1);
         }
@@ -402,30 +401,27 @@ void lcd_draw_text(const char *const cstr) {
     }
 }
 
-static void div_10(uint8_t value, uint8_t *div, uint8_t *mod) {
-    uint8_t d, m;
-    
-    d = value >> 1;
-    d += d >> 1;
-    d += d >> 4;
-    d >>= 3;
-    
-    uint8_t div_x_10 = (d << 3) + (d << 1);
-    m = value - div_x_10;
-    
-    *div = d;
-    *mod = m;
-}
 void lcd_draw_int(uint8_t value) {
     char buff[4];
     int8_t pos = 2;
-    uint8_t div, mod;
+    uint8_t div;
+    
     while (pos >= 0) {
-        div_10(value, &div, &mod);
+        div = value / 10;
+        
+        uint8_t div_x_10 = (div << 3) + (div << 1);
+        uint8_t mod = value - div_x_10;
+        
+        if (mod == 0 && div == 0) {
+            buff[pos] = ' ';
+        } else {
+            buff[pos] = mod + '0';
+        }
+        
         value = div;
-        buff[pos] = mod + '0';
         --pos;
     }
+    
     buff[3] = 0;
     lcd_draw_text(buff);
 }
