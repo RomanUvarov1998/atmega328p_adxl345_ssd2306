@@ -50,6 +50,8 @@ uint8_t get_enc_value(void) {
 #define D3_IS_HIGH ((PIND & _BV(PIND3)) > 0)
 
 ISR(PCINT2_vect) { 
+    hang_if_not(value_change_cbk != 0);
+    
     if (!D3_IS_HIGH) {
         enum EncChangeDirection dir = D2_IS_HIGH ? ECD_Dec : ECD_Inc;
         enc_value = value_change_cbk(enc_value, btn_is_pressed, dir);
