@@ -4,6 +4,8 @@
 #include "font.h"
 #include "utils.h"
 #define SLAVE_ADDR 0b0111100
+#define MAX_COL_ADDR 127
+#define MAX_PAGE_ADDR 7
 
 static uint8_t cmd_buf[TWI_BUFFER_LENGTH];
 static volatile uint8_t buf_size = 0;
@@ -33,6 +35,7 @@ enum Cmd {
     CMD_SET_INVERSE_MODE = 0xA6,
     CMD_SET_PAGE_START_ADDR = 0xB0,
     CMD_SET_COLUMN_RANGE_ADDRS = 0x21,
+    CMD_SET_PAGE_RANGE_ADDRS = 0x22,
     CMD_SET_DISPLAY_START_LINE_REG = 0x40,
 };
     
@@ -89,6 +92,7 @@ static void set_inverse_mode(enum NormalInverseMode mode);
 static void set_col_start_addr(uint8_t addr);
 static void set_col_range_addr(uint8_t start_addr, uint8_t end_addr);
 static void set_page_start_addr(uint8_t addr);
+static void set_page_range_addr(uint8_t start_addr, uint8_t end_addr);
 static void draw_symbol(const Symbol const* sym_buf);
 
 #define SYM_COL_MAX 127
@@ -167,7 +171,7 @@ static void set_memory_addressing_mode(enum MemoryAddressingMode mode) {
     cmd_buf_clear();
     cmd_buf_push(CMD_ZERO);
     cmd_buf_push(CMD_SET_MEMORY_ADDRESSING_MODE);
-    cmd_buf_push(mode);    
+    cmd_buf_push((uint8_t)mode);    
     cmd_buf_send(); 
 }
 
@@ -311,6 +315,15 @@ static void set_page_start_addr(uint8_t addr) {
     cmd_buf_send();
 }
 
+static void set_page_range_addr(uint8_t start_addr, uint8_t end_addr) {
+    cmd_buf_clear();
+    cmd_buf_push(CMD_ZERO);
+    cmd_buf_push(CMD_SET_PAGE_RANGE_ADDRS);     
+    cmd_buf_push(start_addr & 0x7F);       
+    cmd_buf_push(end_addr & 0x7F);     
+    cmd_buf_send();
+}
+
 //
 // -------------------- Operations -------------------------
 //
@@ -337,8 +350,10 @@ void lcd_init() {
 }
 
 void lcd_clear(void) {
-    set_col_start_addr(0x00);
-    set_page_start_addr(0x00);   
+    ei();
+    set_memory_addressing_mode(MAM_Horizontal);
+    set_col_range_addr(0, MAX_COL_ADDR);
+    set_page_range_addr(0, MAX_PAGE_ADDR); 
     
     di();
     // start
@@ -360,8 +375,8 @@ void lcd_clear(void) {
     hang_if_not(TW_STATUS == TW_MT_DATA_ACK);
     
     uint8_t page, col;
-    for (page = 0; page < 8; ++page) {
-        for (col = 0; col < 128; ++col) {
+    for (page = 0; page <= MAX_PAGE_ADDR; ++page) {
+        for (col = 0; col <= MAX_COL_ADDR; ++col) {
             TWDR = 0x00;
             TWCR = _BV(TWINT) | _BV(TWEA) | _BV(TWEN);
             while ((TWCR & _BV(TWINT)) == 0);
