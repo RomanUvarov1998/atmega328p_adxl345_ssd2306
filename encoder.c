@@ -17,22 +17,22 @@ static volatile ValueChangeCbk value_change_cbk = 0;
 void enc_init(ValueChangeCbk _value_change_cbk) {  
     value_change_cbk = _value_change_cbk;
     
-    /*======== button ==============*/
-    // external interrupt 0 is on PB0
-    DDRB &= ~_BV(DDB0); // is input
-    PORTB |= _BV(PORTB0); // is pulled high
+    /*======== rotating handle ==============*/
+    // PB0 - pin with interrupt
+    // PB1 - pin withthout interrupt, for comparison
+    DDRB &= ~(_BV(DDB0) | _BV(DDB1)); // are input
+    PORTB |= _BV(PORTB0) | _BV(PORTB1); // are pulled high
     
     PCICR |= _BV(PCIE0); // pin change interrupt for PB0-PB5 enabled
-    PCMSK0 |= (1 << 0); // PB0 - button
+    PCMSK0 |= _BV(PCINT0); // PB0
     
-    /*======== rotating handle ==============*/
-    // external interrupt 1 is on PD3
-    // another pin is on PD4
-    DDRD &= ~(_BV(DDD2) | _BV(DDD3)); // both are inputs
-    PORTD |= _BV(PORTD2) | _BV(PORTD3); // both are pulled high
+    /*======== button ==============*/
+    // PB2 - pin with interrupt
+    DDRB &= ~_BV(DDB2); // is input
+    PORTB |= _BV(PORTB2); // is pulled high
     
-    PCICR |= _BV(PCIE2); // pin change interrupt for PD0-PD7 enabled
-    PCMSK2 |= (1 << 3); // PD3 - button
+    PCICR |= _BV(PCIE0); // pin change interrupt for PB0-PB5 enabled
+    PCMSK0 |= _BV(PCINT2); // PB2
 }
 
 bool enc_value_updated(void) {
@@ -43,29 +43,22 @@ uint8_t get_enc_value(void) {
     return enc_value;
 }
 
-//
-// ------------- rotated handle --------------------
-//
-#define D2_IS_HIGH ((PIND & _BV(PIND2)) > 0)
-#define D3_IS_HIGH ((PIND & _BV(PIND3)) > 0)
+#define B0_IS_HIGH ((PINB & _BV(PINB0)) > 0)
+#define B1_IS_HIGH ((PINB & _BV(PINB1)) > 0)
+static volatile bool B0_was_high = true;
 
-static volatile bool prev_D3_is_high = true;
+#define B2_IS_HIGH ((PINB & _BV(PINB2)) > 0)
 
-ISR(PCINT2_vect) {     
-    if (prev_D3_is_high && !D3_IS_HIGH) {
-        enum EncChangeDirection dir = D2_IS_HIGH ? ECD_Inc : ECD_Dec;
+ISR(PCINT0_vect) {    
+    /*======== rotating handle ==============*/
+    if (B0_was_high && !B0_IS_HIGH) {
+        enum EncChangeDirection dir = B1_IS_HIGH ? ECD_Dec : ECD_Inc;
         hang_if_not(value_change_cbk != 0);
         enc_value = value_change_cbk(enc_value, btn_is_pressed, dir);
         new_enc_value_is_read = false;
     }
-    prev_D3_is_high = D3_IS_HIGH;
-}
-
-//
-// ------------- button --------------------
-//
-#define B0_IS_HIGH ((PINB & _BV(PINB0)) > 0)
-
-ISR(PCINT0_vect) {
-    btn_is_pressed = !B0_IS_HIGH;
+    B0_was_high = B0_IS_HIGH;
+    
+    /*======== button ==============*/
+    btn_is_pressed = !B2_IS_HIGH;
 }
