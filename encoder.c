@@ -49,7 +49,7 @@ static volatile bool B0_was_high = true;
 
 #define B2_IS_HIGH ((PINB & _BV(PINB2)) > 0)
 
-ISR(PCINT0_vect) {    
+void enc_process_PCINT0_ISR(void) {
     /*======== rotating handle ==============*/
     if (B0_was_high && !B0_IS_HIGH) {
         enum EncChangeDirection dir = B1_IS_HIGH ? ECD_Dec : ECD_Inc;

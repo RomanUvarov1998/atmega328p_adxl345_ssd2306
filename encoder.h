@@ -24,6 +24,7 @@ extern "C" {
     void enc_init(ValueChangeCbk _change_cbk);
     bool enc_value_updated(void);
     uint8_t get_enc_value(void);
+    void enc_process_PCINT0_ISR(void);
 
 #ifdef	__cplusplus
 }

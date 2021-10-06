@@ -29,15 +29,20 @@ static uint8_t enc_value_increase(uint8_t prev_value, bool btn_is_pressed, enum 
 static uint8_t adc_amp_coeff = 0;
 
 int main(void) {      
+    // init display
     twi_init();
     ei();     
     lcd_init();  
+       
+    // show "Init..." on display
     lcd_clear();
     lcd_set_cursor_pos(0, 0);
     lcd_draw_text("Init...");
     
+    // init all other peripherals
     adc_init();
     enc_init(&enc_value_increase); 
+    adxl345_init();
     
     lcd_clear();
     
@@ -60,4 +65,8 @@ int main(void) {
     }    
     
     return 0;
+}
+
+ISR(PCINT0_vect) {    
+    enc_process_PCINT0_ISR();
 }
