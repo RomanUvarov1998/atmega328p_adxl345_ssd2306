@@ -49,14 +49,16 @@ uint8_t get_enc_value(void) {
 #define D2_IS_HIGH ((PIND & _BV(PIND2)) > 0)
 #define D3_IS_HIGH ((PIND & _BV(PIND3)) > 0)
 
-ISR(PCINT2_vect) { 
-    hang_if_not(value_change_cbk != 0);
-    
-    if (!D3_IS_HIGH) {
-        enum EncChangeDirection dir = D2_IS_HIGH ? ECD_Dec : ECD_Inc;
+static volatile bool prev_D3_is_high = true;
+
+ISR(PCINT2_vect) {     
+    if (prev_D3_is_high && !D3_IS_HIGH) {
+        enum EncChangeDirection dir = D2_IS_HIGH ? ECD_Inc : ECD_Dec;
+        hang_if_not(value_change_cbk != 0);
         enc_value = value_change_cbk(enc_value, btn_is_pressed, dir);
         new_enc_value_is_read = false;
     }
+    prev_D3_is_high = D3_IS_HIGH;
 }
 
 //
