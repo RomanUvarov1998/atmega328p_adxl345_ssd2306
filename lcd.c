@@ -52,12 +52,6 @@ enum DisplayChargePump {
     DCP_Disabled = 0x10
 };
 static void set_charge_pump_enabled(enum DisplayChargePump mode);
-enum MemoryAddressingMode {
-    MAM_Horizontal = 0x00,
-    MAM_Vertical = 0x01,
-    MAM_Page = 0x02
-};
-static void set_memory_addressing_mode(enum MemoryAddressingMode mode);
 static void set_segment_remap(bool do_remap);
 enum COM_OutputScanDirection {
     COSD_Normal = 0x00,
@@ -89,10 +83,9 @@ enum NormalInverseMode {
     NI_Inverse = 0x01
 };
 static void set_inverse_mode(enum NormalInverseMode mode);
-static void set_col_start_addr(uint8_t addr);
-static void set_col_range_addr(uint8_t start_addr, uint8_t end_addr);
-static void set_page_start_addr(uint8_t addr);
-static void set_page_range_addr(uint8_t start_addr, uint8_t end_addr);
+
+static void set_drawing_area(uint8_t page_start, uint8_t page_end, uint8_t col_start, uint8_t col_end);
+
 static void draw_symbol(const Symbol const* sym_buf);
 
 #define SYM_COL_MAX 127
@@ -164,14 +157,6 @@ static void set_charge_pump_enabled(enum DisplayChargePump mode) {
     cmd_buf_push(CMD_ZERO);
     cmd_buf_push(CMD_SET_CHARGE_PUMP_ENABLED);
     cmd_buf_push(mode);    
-    cmd_buf_send(); 
-}
-
-static void set_memory_addressing_mode(enum MemoryAddressingMode mode) {
-    cmd_buf_clear();
-    cmd_buf_push(CMD_ZERO);
-    cmd_buf_push(CMD_SET_MEMORY_ADDRESSING_MODE);
-    cmd_buf_push((uint8_t)mode);    
     cmd_buf_send(); 
 }
 
@@ -277,50 +262,28 @@ static void set_inverse_mode(enum NormalInverseMode mode) {
     cmd_buf_send();
 }
 
-static void set_col_start_addr(uint8_t addr) {
+static void set_drawing_area(uint8_t page_start, uint8_t page_end, uint8_t col_start, uint8_t col_end) {
+    // set_memory_addressing_mode
     cmd_buf_clear();
     cmd_buf_push(CMD_ZERO);
-    
-    uint8_t cmd_low = addr & 0x0F;    
-    cmd_buf_push(cmd_low);
-    
-    cmd_buf_send();
-    
-    cmd_buf_clear();
-    cmd_buf_push(CMD_ZERO);    
-    
-    uint8_t cmd_high = ((addr & 0xF0) >> 4) | 0x10;
-    cmd_buf_push(cmd_high); 
-     
-    cmd_buf_send();
-}
+    cmd_buf_push(CMD_SET_MEMORY_ADDRESSING_MODE);
+    cmd_buf_push(0x00); // Horisontal
+    cmd_buf_send(); 
 
-static void set_col_range_addr(uint8_t start_addr, uint8_t end_addr) {    
-    cmd_buf_clear();
-    cmd_buf_push(CMD_ZERO);
-    cmd_buf_push(CMD_SET_COLUMN_RANGE_ADDRS);     
-    cmd_buf_push(start_addr & 0x7F);       
-    cmd_buf_push(end_addr & 0x7F);     
-    cmd_buf_send();
-}
-
-static void set_page_start_addr(uint8_t addr) {
-    cmd_buf_clear();
-    cmd_buf_push(CMD_ZERO);
-    
-    uint8_t cmd = CMD_SET_PAGE_START_ADDR;
-    cmd |= addr & 0x07;
-    cmd_buf_push(cmd); 
-    
-    cmd_buf_send();
-}
-
-static void set_page_range_addr(uint8_t start_addr, uint8_t end_addr) {
+    // set_page_range_addr(page_start, page_end);
     cmd_buf_clear();
     cmd_buf_push(CMD_ZERO);
     cmd_buf_push(CMD_SET_PAGE_RANGE_ADDRS);     
-    cmd_buf_push(start_addr & 0x7F);       
-    cmd_buf_push(end_addr & 0x7F);     
+    cmd_buf_push(page_start & 0x7F);       
+    cmd_buf_push(page_end & 0x7F);     
+    cmd_buf_send();
+    
+    // set_col_range_addr(col_start, col_end);
+    cmd_buf_clear();
+    cmd_buf_push(CMD_ZERO);
+    cmd_buf_push(CMD_SET_COLUMN_RANGE_ADDRS);     
+    cmd_buf_push(col_start & 0x7F);       
+    cmd_buf_push(col_end & 0x7F);     
     cmd_buf_send();
 }
 
@@ -335,7 +298,6 @@ void lcd_init() {
     set_display_offset(0x00);
     set_display_start_line(0x00);
     set_charge_pump_enabled(DCP_Enabled);
-    set_memory_addressing_mode(MAM_Horizontal);
     set_com_output_scan_direction(COSD_Normal);
     set_segment_remap(false);
     set_com_pins_hw_config(CPC_Sequential, CLRRS_Disable);
@@ -345,15 +307,12 @@ void lcd_init() {
     deactivate_scroll();
     set_output_follow_RAM_content(DRC_Follow);
     set_inverse_mode(NI_Normal);
-    set_col_start_addr(0x00);
-    set_page_start_addr(0x00);    
+    set_drawing_area(0, MAX_PAGE_ADDR, 0, MAX_COL_ADDR);  
 }
 
 void lcd_clear(void) {
     ei();
-    set_memory_addressing_mode(MAM_Horizontal);
-    set_col_range_addr(0, MAX_COL_ADDR);
-    set_page_range_addr(0, MAX_PAGE_ADDR); 
+    set_drawing_area(0, MAX_PAGE_ADDR, 0, MAX_COL_ADDR);  
     
     di();
     // start
@@ -489,8 +448,7 @@ static void cmd_buf_send() {
 }
 
 static void draw_symbol(const Symbol const* sym_buf) {   
-    set_col_range_addr(sym_col, sym_col + SYMBOL_W_COLS);
-    set_page_start_addr(sym_page);
+    set_drawing_area(sym_page, sym_page, sym_col, sym_col + SYMBOL_W_COLS);  
     
     cmd_buf_clear();
     
