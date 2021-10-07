@@ -418,6 +418,46 @@ void lcd_draw_uint16(uint16_t value) {
     #undef DIGITS_CNT
 }
 
+void lcd_draw_int16(int16_t value) {
+    #define DIGITS_CNT 7
+    #define DIGITS_BUF_LEN (DIGITS_CNT + 1)
+    #define RIGHT_DIGIT_POS (DIGITS_CNT - 1)
+    char buff[DIGITS_BUF_LEN] = {0};
+    int8_t pos = RIGHT_DIGIT_POS;
+    uint16_t div;
+    
+    bool is_neg = value < 0;
+    bool sign_was_printed = false;    
+    if (is_neg)
+        value = -value;
+    
+    while (pos >= 0) {
+        div = (uint16_t)value / 10;
+        
+        uint16_t div_x_10 = (div << 3) + (div << 1);
+        uint8_t mod = (uint16_t)value - div_x_10;
+        
+        if (mod == 0 && div == 0 && pos < RIGHT_DIGIT_POS) {
+            if (!sign_was_printed && is_neg) {
+                buff[pos] = '-';
+                sign_was_printed = true;
+            } else {
+                buff[pos] = ' ';
+            }
+        } else {
+            buff[pos] = mod + '0';
+        }
+        
+        value = div;
+        --pos;
+    }
+    
+    lcd_draw_text(buff);
+    #undef RIGHT_DIGIT_POS
+    #undef DIGITS_BUF_LEN
+    #undef DIGITS_CNT
+}
+
 void lcd_set_cursor_pos(uint8_t row, uint8_t col) {
     #define MAX_COL (127 / SYMBOL_W_COLS)
     #define MAX_ROW SYM_PAGE_MAX

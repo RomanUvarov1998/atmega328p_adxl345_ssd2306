@@ -19,6 +19,7 @@ extern "C" {
     void lcd_draw_text(const char *const cstr);
     void lcd_draw_uint8(uint8_t value);
     void lcd_draw_uint16(uint16_t value);
+    void lcd_draw_int16(int16_t value);
     void lcd_set_cursor_pos(uint8_t row, uint8_t col);
 
 #ifdef	__cplusplus
