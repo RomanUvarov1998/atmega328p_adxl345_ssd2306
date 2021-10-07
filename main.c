@@ -11,17 +11,24 @@
 #define ENC_VALUE_STEP_BIG 10
 #define ENC_VALUE_MAX 64
 #define ENC_VALUE_MIN 1
-static uint8_t enc_value_increase(uint8_t prev_value, bool btn_is_pressed, enum EncChangeDirection dir) {
-    uint8_t step = btn_is_pressed ? ENC_VALUE_STEP_BIG : ENC_VALUE_STEP_SMALL;
-    switch (dir) {
-        case ECD_Dec: prev_value -= step; break;
-        case ECD_Inc: prev_value += step; break;
-    }
+static uint8_t enc_value_changed(uint8_t prev_value, bool btn_is_pressed, enum EncChangeDirection dir) {
+    uint8_t step = btn_is_pressed ? ENC_VALUE_STEP_BIG : ENC_VALUE_STEP_SMALL;    
     
-    if (prev_value > ENC_VALUE_MAX)
-        prev_value = ENC_VALUE_MAX;
-    if (prev_value < ENC_VALUE_MIN)
-        prev_value = ENC_VALUE_MIN;
+    switch (dir) {
+        case ECD_Dec: 
+            if (prev_value < ENC_VALUE_MIN + step)
+                prev_value = ENC_VALUE_MIN;
+            else
+                prev_value -= step; 
+            break;
+        
+        case ECD_Inc: 
+            if (prev_value + step > ENC_VALUE_MAX)
+                prev_value = ENC_VALUE_MAX;
+            else
+                prev_value += step; 
+            break;
+    }
     
     return prev_value;
 }
@@ -41,8 +48,7 @@ int main(void) {
     
     // init all other peripherals
     adc_init();
-    enc_init(&enc_value_increase); 
-    adxl345_init();
+    enc_init(&enc_value_changed); 
     
     lcd_clear();
     
