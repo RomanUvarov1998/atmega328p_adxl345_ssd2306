@@ -22,6 +22,7 @@ extern "C" {
 #include "lcd.h"
 #include "encoder.h"
 #include "adc.h"
+#include "adxl345.h"
 
 #ifdef	__cplusplus
 }

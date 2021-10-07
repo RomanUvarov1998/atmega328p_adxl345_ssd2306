@@ -49,11 +49,19 @@ int main(void) {
     // init all other peripherals
     adc_init();
     enc_init(&enc_value_changed); 
+    adxl345_init();
     
     lcd_clear();
     
     lcd_set_cursor_pos(0, 0);
-    lcd_draw_text("SENS: ...");
+    lcd_draw_text("SENS: ... ADC: ");
+    
+    lcd_set_cursor_pos(1, 0);
+    lcd_draw_text("X: ");
+    lcd_set_cursor_pos(2, 0);
+    lcd_draw_text("Y: ");
+    lcd_set_cursor_pos(3, 0);
+    lcd_draw_text("Z: ");
     
     for (;;) {
         if (enc_value_updated()) {
@@ -64,10 +72,20 @@ int main(void) {
         
         uint16_t value = adc_scan_channel_uint16(ADCCH_0);
         value *= adc_amp_coeff;
-        lcd_set_cursor_pos(1, 0);
+        lcd_set_cursor_pos(0, 15);
         lcd_draw_uint16(value);
         
-        _delay_ms(100);
+        if (adxl345_has_unread_data()) {            
+            struct AccValues acc = adxl345_get_XYZ_data();
+            lcd_set_cursor_pos(1, 3);
+            lcd_draw_int16(acc.x_mg);
+            lcd_set_cursor_pos(2, 3);
+            lcd_draw_int16(acc.y_mg);
+            lcd_set_cursor_pos(3, 3);
+            lcd_draw_int16(acc.z_mg);
+        }
+        
+        _delay_ms(10); // 100 Hz
     }    
     
     return 0;
@@ -75,4 +93,5 @@ int main(void) {
 
 ISR(PCINT0_vect) {    
     enc_process_PCINT0_ISR();
+    adxl345_process_PCINT0_ISR();
 }
