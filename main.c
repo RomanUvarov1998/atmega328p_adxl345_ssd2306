@@ -50,6 +50,7 @@ int main(void) {
     adc_init();
     enc_init(&enc_value_changed); 
     adxl345_init();
+    pwm_init();
     
     lcd_clear();
     
@@ -77,12 +78,18 @@ int main(void) {
         
         if (adxl345_has_unread_data()) {            
             struct AccValues acc = adxl345_get_XYZ_data();
+            
             lcd_set_cursor_pos(1, 3);
             lcd_draw_int16(acc.x_mg);
             lcd_set_cursor_pos(2, 3);
             lcd_draw_int16(acc.y_mg);
             lcd_set_cursor_pos(3, 3);
             lcd_draw_int16(acc.z_mg);
+            
+            #define ABS(x) ((x) < 0 ? -(x) : (x))
+            pwm_set_channel_brightness(PWM_Ch_0, (uint8_t)ABS(acc.x_mg >> 2));
+            pwm_set_channel_brightness(PWM_Ch_1, (uint8_t)ABS(acc.y_mg >> 2));
+            pwm_set_channel_brightness(PWM_Ch_2, (uint8_t)ABS(acc.z_mg >> 2));
         }
         
         _delay_ms(10); // 100 Hz

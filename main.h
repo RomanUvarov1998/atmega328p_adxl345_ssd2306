@@ -23,6 +23,7 @@ extern "C" {
 #include "encoder.h"
 #include "adc.h"
 #include "adxl345.h"
+#include "pwm.h"
 
 #ifdef	__cplusplus
 }
