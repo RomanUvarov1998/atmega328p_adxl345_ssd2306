@@ -14,14 +14,17 @@ extern "C" {
     
     #include <stdint.h>
 
-    void pwm_init(void);
-
-    enum PWM_Channels {
-        PWM_Ch_0 = 0,
-        PWM_Ch_1 = 1,
-        PWM_Ch_2 = 2,
+    enum PWM_Pin {
+        PWM_Pin_PD6 = 0, // OC0A
+        PWM_Pin_PD5, // OC0B
+        PWM_Pin_PB1, // OC1A
+        PWM_Pin_PB2, // OC1B
+        PWM_Pin_PB3, // OC2A
+        PWM_Pin_PD3, // OC2B
+        PWM_PINS_COUNT
     };
-    void pwm_set_channel_brightness(enum PWM_Channels channel, uint8_t value);
+    void pwm_init_pin(enum PWM_Pin pin, uint8_t value);
+    void pwm_set_pin_brightness(enum PWM_Pin pin, uint8_t value);
 
 #ifdef	__cplusplus
 }

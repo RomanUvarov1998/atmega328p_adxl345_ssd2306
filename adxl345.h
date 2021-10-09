@@ -27,6 +27,14 @@ extern "C" {
     bool adxl345_has_unread_data(void);
     struct AccValues adxl345_get_XYZ_data(void);
     void adxl345_process_PCINT0_ISR(void);
+    
+    enum DataResolution {
+        DR_PlusMinus_2g = 0x00,
+        DR_PlusMinus_4g,
+        DR_PlusMinus_8g,
+        DR_PlusMinus_16g,
+    };
+    void adxl345_set_resolution(enum DataResolution res);
 
 #ifdef	__cplusplus
 }

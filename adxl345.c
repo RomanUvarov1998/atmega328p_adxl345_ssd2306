@@ -81,12 +81,7 @@ static IntSource get_int_source(void);
 
 typedef union {
     struct {
-        enum {
-            DR_PlusMinus_2g = 0x00,
-            DR_PlusMinus_4g,
-            DR_PlusMinus_8g,
-            DR_PlusMinus_16g,
-        }       range : 2;
+        enum DataResolution range : 2;
         bool    justify : 1;
         bool    full_res : 1;
         bool    dummy : 1;
@@ -135,9 +130,9 @@ void adxl345_init(void) {
     
     DataFormat data_format = {
         .as_bits = {
-            .range = DR_PlusMinus_16g,
+            .range = DR_PlusMinus_2g,
             .justify = 0, // right alignment
-            .full_res = 1,
+            .full_res = 0,
             .dummy = 0,
             .int_invert = 0, // pin gets low on interrupt
             .spi = 0,
@@ -215,6 +210,21 @@ struct AccValues adxl345_get_XYZ_data(void) {
     };   
     
     return acc;
+}
+
+void adxl345_set_resolution(enum DataResolution res) {
+    DataFormat data_format = {
+        .as_bits = {
+            .range = res,
+            .justify = 0, // right alignment
+            .full_res = 0,
+            .dummy = 0,
+            .int_invert = 0, // pin gets low on interrupt
+            .spi = 0,
+            .self_test = 0
+        }
+    };
+    set_data_format(data_format);
 }
 
 #define B3_IS_HIGH ((PINB & _BV(PINB3)) > 0)

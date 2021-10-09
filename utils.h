@@ -19,10 +19,14 @@ extern "C" {
     
     enum ErrKind {
         ERR_TWI_CMD_BUF_OVERFLOW = 5,
-        ERR_TWI_BUS_ERR = 6
+        ERR_TWI_BUS_ERR = 6,
+        ERR_COUNT
     };
+    
+    STATIC_ASSERT(ERR_COUNT)
 
     void hang_if_not(bool expr);
+    void blink(void);
 
 #ifdef	__cplusplus
 }
