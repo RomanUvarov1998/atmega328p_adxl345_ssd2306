@@ -100,37 +100,37 @@ void pwm_init_pin(enum PWM_Pin pin, uint8_t value) {
     case PWM_Ch_OC0A: 
         wgm(TCCR0A, TCCR0B, WGM02, WGM01, WGM00, WGM_PWM_Fast_TOP_0xFF);
         com(TCCR0A, COM0A1, COM0A0, COM_CompareMatchClear_BottomSet); 
-        cs(TCCR0B, CS02, CS01, CS00, CS_PSK_64);
+        cs(TCCR0B, CS02, CS01, CS00, CS_PSK_256);
         break;
 
     case PWM_Ch_OC0B: 
         wgm(TCCR0A, TCCR0B, WGM02, WGM01, WGM00, WGM_PWM_Fast_TOP_0xFF);
         com(TCCR0A, COM0B1, COM0B0, COM_CompareMatchClear_BottomSet);
-        cs(TCCR0B, CS02, CS01, CS00, CS_PSK_64);
+        cs(TCCR0B, CS02, CS01, CS00, CS_PSK_256);
         break;
 
     case PWM_Ch_OC1A:
         wgm(TCCR1A, TCCR1B, WGM12, WGM11, WGM10, WGM_PWM_Fast_TOP_0xFF);
         com(TCCR1A, COM1A1, COM1A0, COM_CompareMatchClear_BottomSet);
-        cs(TCCR1B, CS12, CS11, CS10, CS_PSK_64);
+        cs(TCCR1B, CS12, CS11, CS10, CS_PSK_256);
         break;
 
     case PWM_Ch_OC1B:
         wgm(TCCR1A, TCCR1B, WGM12, WGM11, WGM10, WGM_PWM_Fast_TOP_0xFF);
         com(TCCR1A, COM1B1, COM1B0, COM_CompareMatchClear_BottomSet);
-        cs(TCCR1B, CS12, CS11, CS10, CS_PSK_64);
+        cs(TCCR1B, CS12, CS11, CS10, CS_PSK_256);
         break;
 
     case PWM_Ch_OC2A:
         wgm(TCCR2A, TCCR2B, WGM22, WGM21, WGM20, WGM_PWM_Fast_TOP_0xFF);
         com(TCCR2A, COM2A1, COM2A0, COM_CompareMatchClear_BottomSet);
-        cs(TCCR2B, CS22, CS21, CS20, CS_PSK_64);
+        cs(TCCR2B, CS22, CS21, CS20, CS_PSK_256);
         break;
 
     case PWM_Ch_OC2B:
         wgm(TCCR2A, TCCR2B, WGM22, WGM21, WGM20, WGM_PWM_Fast_TOP_0xFF);
         com(TCCR2A, COM2B1, COM2B0, COM_CompareMatchClear_BottomSet);
-        cs(TCCR2B, CS22, CS21, CS20, CS_PSK_64);
+        cs(TCCR2B, CS22, CS21, CS20, CS_PSK_256);
         break;
     }
 }

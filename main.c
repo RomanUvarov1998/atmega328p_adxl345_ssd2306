@@ -7,7 +7,7 @@
 
 #include "main.h"
 
-uint8_t map_int16_to_uint8(int16_t value);
+uint8_t convert_acc_to_pwm(int16_t value);
 static uint8_t enc_value_changed(uint8_t prev_value, bool btn_is_pressed, enum EncChangeDirection dir);
 static uint8_t acc_data_resolution = 0;
 
@@ -43,8 +43,6 @@ int main(void) {
     lcd_set_cursor_pos(3, 0);
     lcd_draw_text("Z: ");
     
-    hang_if_not(map_int16_to_uint8(0xAAFF) == 0x55);
-    
     for (;;) {
         if (enc_value_updated()) {
             lcd_set_cursor_pos(0, 6);
@@ -64,9 +62,9 @@ int main(void) {
         if (adxl345_has_unread_data()) {            
             struct AccValues acc = adxl345_get_XYZ_data();
             
-            uint8_t x = map_int16_to_uint8(acc.x_mg);
-            uint8_t y = map_int16_to_uint8(acc.y_mg);
-            uint8_t z = map_int16_to_uint8(acc.z_mg);
+            uint8_t x = convert_acc_to_pwm(acc.x_mg);
+            uint8_t y = convert_acc_to_pwm(acc.y_mg);
+            uint8_t z = convert_acc_to_pwm(acc.z_mg);
             
             lcd_set_cursor_pos(1, 3);
             lcd_draw_int16((int16_t)x);
@@ -112,23 +110,14 @@ static uint8_t enc_value_changed(uint8_t prev_value, bool btn_is_pressed, enum E
     return prev_value;
 }
 
-uint8_t map_int16_to_uint8(int16_t value) {
+uint8_t convert_acc_to_pwm(int16_t value) {
     if (value < 0)
-        value -= value;
-    
-    value >>= 4;
-    
-    uint8_t value8 = (uint8_t)value;
-    return value8;
-    
-    // remove sign 
-    uint16_t value_16 = (uint16_t)value, msk = 0x7FFF;
-    value_16 &= msk;   
-    // got 15 bit positve value
-    // result = x * x^8 / 2^15 = x / 2^7
-    value_16 >>= 7;
-    // truncate
-    uint8_t value_8 = (uint8_t)value_16;
+        value = -value;
+    value >>= 2;
+    if (value > 255)
+        value = 255;
+        
+    uint8_t value_8 = (uint8_t)value;
     return value_8;
 }
 
